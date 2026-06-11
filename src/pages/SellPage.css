@@ -1,0 +1,271 @@
+/* 기존 스타일 유지 및 아래 항목 추가/수정 */
+
+.sell-page-container {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.sell-header {
+  margin-bottom: 28px;
+}
+.sell-header h2 {
+  font-size: 26px;
+  color: #1e293b;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.sell-header p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.sell-form-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05),
+    0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+}
+
+.form-section {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin-left: 2px;
+}
+
+/* 🔄 물물교환 토글 레이아웃 디자인 */
+.barter-toggle-section {
+  background-color: #f8fafc;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.barter-toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.barter-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-sub-label {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 📱 스마트폰 감성의 iOS형 스위치 버튼 */
+.barter-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  padding: 0;
+}
+
+/* 토글 활성화 시 당근색 마켓 컬러 변환 */
+.barter-switch.active {
+  background-color: #ff6f61;
+}
+
+/* 스위치 내부 동그라미 휠 조작기 */
+.switch-handle {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.barter-switch.active .switch-handle {
+  transform: translateX(24px);
+}
+
+/* ✨ 인풋창이 스르륵 나타나는 페이드인 애니메이션 효과 */
+.animated-fade-in {
+  animation: slideDown 0.25s ease-out forwards;
+  margin-top: 8px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 아이콘 잔잔하게 회전하는 효과 (포인트 디자인) */
+.spin-slow {
+  animation: slowRotation 8s linear infinite;
+}
+@keyframes slowRotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 기존 나머지 인풋 및 버튼 공통 디자인 */
+.image-pickers-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.uploader-trigger-box {
+  width: 110px;
+  height: 110px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+.uploader-trigger-box:hover {
+  border-color: #ff6f61;
+  background-color: #fff5f5;
+}
+.uploader-trigger-box span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.preview-image-container {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+.preview-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-remove-preview {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background-color: rgba(15, 23, 42, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+}
+.currency-won {
+  position: absolute;
+  left: 16px;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1e293b;
+  outline: none;
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+.input-with-icon input:focus {
+  border-color: #ff6f61;
+  box-shadow: 0 0 0 4px rgba(255, 111, 97, 0.12);
+}
+
+.form-section textarea {
+  width: 100%;
+  padding: 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1e293b;
+  outline: none;
+  resize: none;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+.form-section textarea:focus {
+  border-color: #ff6f61;
+  box-shadow: 0 0 0 4px rgba(255, 111, 97, 0.12);
+}
+
+.sell-submit-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px;
+  background-color: #ff6f61;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 111, 97, 0.25);
+  transition: all 0.2s ease;
+}
+.sell-submit-btn:hover {
+  background-color: #fa5a4a;
+  transform: translateY(-1px);
+}

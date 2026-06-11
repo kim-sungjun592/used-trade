@@ -1,0 +1,124 @@
+.app-navbar {
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 16px;
+}
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #ff6f61;
+}
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.btn-sell-nav {
+  background: #ff6f61;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+.nav-icon-link {
+  color: #475569;
+  display: flex;
+  align-items: center;
+}
+
+/* 통합 메뉴 스타일 */
+.my-menu-wrapper {
+  position: relative;
+}
+.my-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #334155;
+}
+.my-menu-btn:hover {
+  background: #e2e8f0;
+}
+.nav-avatar {
+  background: #cbd5e1;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+.my-menu-btn .nav-arrow {
+  transition: transform 0.2s ease;
+}
+.my-menu-btn .nav-arrow.open {
+  transform: rotate(180deg);
+}
+
+.my-menu-popover {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  width: 180px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 110;
+}
+.popover-user {
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+.popover-points {
+  color: #ff6f61;
+  font-weight: bold;
+  font-size: 12px;
+}
+.my-menu-popover hr {
+  border: 0;
+  border-top: 1px solid #f1f5f9;
+  margin: 6px 0;
+}
+.popover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 14px;
+  color: #475569;
+}
+.popover-item:hover {
+  background: #f8fafc;
+  color: #ff6f61;
+}
