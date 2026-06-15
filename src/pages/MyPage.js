@@ -177,23 +177,50 @@ export default function MyPage() {
           </div>
         )}
 
-        {/* 🔄 탭 [D] : 물물교환 요청 기록 */}
+        {/* 🔄 탭 [D] : 물물교환 요청 기록 (보낸 요청과 받은 요청을 라벨로 명확히 분리!) */}
         {activeTab === 'barter' && (
           <div className="mypage-tab-pane">
-            <div className="pane-header"><h4>물물교환 신청 내역</h4></div>
+            <div className="pane-header"><h4>물물교환 내역</h4></div>
             <div className="barter-list">
               {requests.length === 0 ? (
                 <p className="empty-txt">교환 신청 내역이 깨끗합니다.</p>
               ) : (
-                requests.map(req => (
-                  <div key={req.id} className="barter-card-item">
-                    <div className="barter-item-title">{req.productTitle}</div>
-                    <div className="barter-item-detail">
-                      <span>제안 물품: <b>{req.proposedItem}</b></span>
-                      <span className={`status-badge ${req.status}`}>{req.status}</span>
+                // [...requests].reverse()를 사용하여 방금 상세페이지에서 제안한 최신 내역이 리스트 맨 위에 뜨게 만듭니다.
+                [...requests].reverse().map(req => {
+                  // 내가 보낸 요청인지 확인하는 판별식 (senderId나 sender 이름 기준)
+                  const isMyProposal = req.senderId === 'user_guest' || req.sender === '홍길동';
+
+                  return (
+                    <div 
+                      key={req.id} 
+                      className="barter-card-item" 
+                      style={{ borderLeft: isMyProposal ? '4px solid #059669' : '4px solid #ff6f61' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div>
+                          <span className="status-badge" style={{ 
+                            background: isMyProposal ? '#e6f4ea' : '#fce8e6', 
+                            color: isMyProposal ? '#137333' : '#c5221f', 
+                            marginRight: '8px',
+                            fontWeight: 'bold'
+                          }}>
+                            {isMyProposal ? '📤 보낸 제안' : '📥 받은 제안'}
+                          </span>
+                          <span className={`status-badge ${req.status}`}>{req.status}</span>
+                        </div>
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{req.createdAt || '방금 전'}</span>
+                      </div>
+                      
+                      <div className="barter-item-title" style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>
+                        상대 상품: <span>{req.productTitle}</span>
+                      </div>
+                      
+                      <div className="barter-item-detail" style={{ marginTop: '6px', fontSize: '13px', color: '#475569' }}>
+                        <span>제안한 물건: <b style={{ color: isMyProposal ? '#059669' : '#1e293b' }}>{req.proposedItem}</b></span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

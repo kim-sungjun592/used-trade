@@ -110,14 +110,19 @@ export default function Home() {
       {/* 📦 상품 리스트 그리드 */}
       <div className="main-product-grid">
         {filteredProducts.map(product => {
-          const isLiked = likedItems && likedItems.has(String(product.id));
+          // 💡 [.has] 대신 배열 체크용 [.includes] 또는 [.some]을 사용해 에러를 방지합니다.
+          const isLiked = likedItems && (
+            Array.isArray(likedItems) 
+              ? likedItems.includes(product.id) || likedItems.includes(String(product.id))
+              : typeof likedItems.has === 'function' ? likedItems.has(String(product.id)) : false
+          );
 
           return (
             <div key={product.id} className="main-card">
               
               <div 
                 className="card-img-holder" 
-                onClick={() => navigate(`/product/${product.id}`)} // 👈 로그인 제한 없이 바로 이동!
+                onClick={() => navigate(`/product/${product.id}`)}
                 style={{ position: 'relative', cursor: 'pointer' }} 
               >
                 <img src={product.image} alt={product.title} />
@@ -126,7 +131,7 @@ export default function Home() {
                   className={`main-card-like-btn ${isLiked ? 'liked' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleLike(product.id); // 👈 로그인 안내 팝업 완전 제거!
+                    toggleLike(product.id);
                   }}
                 >
                   {isLiked ? '❤️' : '🤍'}

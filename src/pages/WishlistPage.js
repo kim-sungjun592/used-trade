@@ -1,75 +1,127 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, Search, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import './WishlistPage.css'; 
+import { useNavigate } from 'react-router-dom';
+import './WishlistPage.css';
 
 export default function WishlistPage() {
-  const context = useApp() || {};
-  const products = context.products || [];
-  const likedItems = context.likedItems || new Set();
-  const toggleLike = context.toggleLike || (() => {});
+  const { likedProducts } = useApp();
+  const { toggleLike } = useApp();
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [removingId, setRemovingId] = useState(null);
 
-  const wishlist = products.filter(p => {
-    try {
-      if (typeof likedItems.has === 'function') {
-        return likedItems.has(p.id) || likedItems.has(String(p.id)) || likedItems.has(Number(p.id));
-      } else if (Array.isArray(likedItems)) {
-        return likedItems.includes(p.id) || likedItems.includes(String(p.id)) || likedItems.includes(Number(p.id));
-      }
-      return false;
-    } catch (error) {
-      return false;
-    }
-  });
+  // likedProducts 는 AppContext에서 이미 products.filter(...)로 만들어진 배열
+  const likes = Array.isArray(likedProducts) ? likedProducts : [];
+
+  const filtered = likes.filter(p =>
+    (p.title || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p.category || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleRemove = (e, id) => {
+    e.stopPropagation();
+    setRemovingId(id);
+    setTimeout(() => {
+      toggleLike(id);
+      setRemovingId(null);
+    }, 300);
+  };
 
   return (
-    <div className="wishlist-layout">
-      <div className="wishlist-container">
-        
+    <div className="wishlist-page">
+      <div className="wishlist-inner">
+
+        {/* 헤더 */}
         <div className="wishlist-header">
-          <div className="header-title-box">
-            <Heart className="header-icon" size={28} fill="#ff6f61" stroke="#ff6f61" />
-            <h1>나의 찜 목록</h1>
-            <span className="wish-badge">{wishlist.length}</span>
+          <div className="wishlist-title-row">
+            <div className="wishlist-icon-wrap">
+              <Heart size={24} fill="white" color="white" />
+            </div>
+            <div>
+              <h1>찜한 상품</h1>
+              <p>관심 있는 상품을 모아뒀어요</p>
+            </div>
           </div>
-          <p className="header-subtitle">마음에 쏙 든 상품들을 모아봤어요 💕</p>
+          <div className="wishlist-count-badge">
+            총 <strong>{likes.length}</strong>개
+          </div>
         </div>
 
-        {wishlist.length === 0 ? (
+        {/* 검색바 */}
+        {likes.length > 0 && (
+          <div className="wishlist-search-wrap">
+            <Search size={16} className="search-icon" />
+            <input
+              type="text"
+              placeholder="찜 목록에서 검색..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* 빈 상태 */}
+        {likes.length === 0 ? (
           <div className="wishlist-empty">
-            <div className="empty-icon-circle">
-              <ShoppingBag size={48} color="#cbd5e1" strokeWidth={1.5} />
+            <div className="empty-heart-anim">
+              <Heart size={56} color="#e2e8f0" />
             </div>
             <h3>아직 찜한 상품이 없어요</h3>
-            <p>마음에 드는 상품에 하트를 꾹 눌러보세요!</p>
-            <Link to="/" className="btn-browse">인기 상품 둘러보기</Link>
+            <p>마음에 드는 상품에 하트를 눌러보세요</p>
+            <button className="go-home-btn" onClick={() => navigate('/')}>
+              <ShoppingBag size={16} />
+              상품 둘러보기
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="wishlist-empty">
+            <p style={{ color: '#94a3b8' }}>"{search}" 와 일치하는 상품이 없어요</p>
           </div>
         ) : (
-          <div className="wish-product-grid">
-            {wishlist.map(p => (
-              <div key={p.id} className="wish-card">
-                <div className="wish-img-holder" onClick={() => navigate(`/product/${p.id}`)}>
-                  <img src={p.image} alt={p.title} />
-                  <button 
-                    className="wish-like-btn liked"
-                    onClick={(e) => {
-                      e.stopPropagation(); 
-                      toggleLike(p.id); 
+          <div className="wishlist-grid">
+            {filtered.map(product => (
+              <div
+                key={product.id}
+                className={`wishlist-card ${removingId === product.id ? 'removing' : ''}`}
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
+                <div className="wl-img-wrap">
+                  <img
+                    src={product.image}
+                    alt={product.title}
+                    onError={e => {
+                      e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop';
                     }}
+                  />
+                  <button
+                    className="wl-remove-btn"
+                    onClick={e => handleRemove(e, product.id)}
+                    title="찜 해제"
                   >
-                    ❤️
+                    <Trash2 size={14} />
                   </button>
+                  {product.category && (
+                    <span className="wl-category-chip">{product.category}</span>
+                  )}
                 </div>
 
-                <div className="wish-details" onClick={() => navigate(`/product/${p.id}`)}>
-                  <span className="wish-cat">{p.category}</span>
-                  <h4 className="wish-title">{p.title}</h4>
-                  <p className="wish-meta">📍 {p.location}</p>
-                  <div className="wish-price-row">
-                    <strong>{p.price.toLocaleString()}원</strong>
+                <div className="wl-card-body">
+                  <p className="wl-title">{product.title}</p>
+                  <div className="wl-bottom-row">
+                    <span className="wl-price">
+                      {product.price != null
+                        ? product.price.toLocaleString() + '원'
+                        : '가격 미정'}
+                    </span>
+                    {product.location && (
+                      <span className="wl-location">{product.location}</span>
+                    )}
                   </div>
+                  {product.exchangeItem && (
+                    <div className="wl-exchange-tag">🔄 {product.exchangeItem}</div>
+                  )}
                 </div>
               </div>
             ))}

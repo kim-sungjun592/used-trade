@@ -14,8 +14,9 @@ export default function ProductDetail() {
   const likedItems = context.likedItems || new Set();
   const toggleLike = context.toggleLike || (() => {});
   
-  // 🔥 1. context에서 채팅 시작 함수(startChat)를 안전하게 꺼내옵니다.
+  // context에서 채팅 시작 함수 및 ⚡교환 제안 함수를 꺼내옵니다.
   const startChat = context.startChat || (() => { console.log('채팅 기능이 연결되지 않았습니다.'); });
+  const addBarterRequest = context.addBarterRequest; // ⚡ 추가된 교환 함수
 
   // 현재 상품 찾기
   const product = products.find(p => String(p.id) === String(id));
@@ -37,10 +38,39 @@ export default function ProductDetail() {
       ? likedItems.includes(product.id) || likedItems.includes(String(product.id)) || likedItems.includes(Number(product.id))
       : false;
 
-  // 🔥 2. 버튼을 눌렀을 때 실행될 마법의 함수를 만들어줍니다.
+  // 버튼을 눌렀을 때 실행될 마법의 함수
   const handleChatClick = () => {
     startChat(product); // 채팅방을 만들거나 찾고
     navigate('/chat');  // 채팅 페이지로 화면을 넘깁니다!
+  };
+
+  // ⚡ 교환 제안 버튼 클릭 시 작동할 팝업 및 데이터 전송 함수
+  const handleBarterClick = () => {
+    const proposedItem = prompt(`🎁 [${product.title}] 상품과 교환하고 싶은 유저님의 물품 이름을 적어주세요!`);
+    
+    if (proposedItem === null) return; // 취소 누르면 나감
+
+    if (proposedItem.trim() === '') {
+      alert('❌ 제안할 물품 이름을 정확하게 입력해 주세요.');
+      return;
+    }
+
+    const requestData = {
+      productId: product.id,
+      productTitle: product.title,
+      receiverId: product.sellerId || 'seller_id',
+      senderId: 'user_guest',
+      sender: '홍길동',
+      proposedItem: proposedItem.trim()
+    };
+
+    if (addBarterRequest) {
+      addBarterRequest(requestData);
+      alert('✨ 교환 제안이 안전하게 전송되었습니다! 마이페이지에서 확인해 보세요.');
+      navigate('/mypage'); // 등록 확인을 위해 마이페이지로 이동
+    } else {
+      alert('❌ 시스템 오류: 교환 제안 기능을 이용할 수 없습니다.');
+    }
   };
 
   return (
@@ -128,7 +158,13 @@ export default function ProductDetail() {
           
           <div className="bottom-vertical-divider"></div>
 
-          {/* 🔥 3. 기존의 alert 창을 지우고, 방금 만든 handleChatClick 함수를 연결합니다. */}
+          {/* ⚡ 새로 추가한 [교환 제안하기] 버튼 */}
+          <button className="bottom-barter-btn" onClick={handleBarterClick}>
+            <RefreshCw size={18} />
+            <span>교환 제안하기</span>
+          </button>
+
+          {/* 채팅으로 거래하기 버튼 */}
           <button className="bottom-chat-btn" onClick={handleChatClick}>
             <MessageCircle size={20} />
             <span>채팅으로 거래하기</span>

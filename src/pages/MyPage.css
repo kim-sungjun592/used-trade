@@ -4,6 +4,7 @@
   padding: 0 20px;
   box-sizing: border-box;
 }
+
 .container-locked {
   display: flex;
   justify-content: center;
@@ -280,13 +281,13 @@
 .tab-btn:hover {
   background: #e2e8f0;
 }
+/* 🗂️ 310번째 줄 부근의 .tab-btn.active 구역을 아래 코드로 교체하세요 */
 .tab-btn.active {
-  background: #ff6f61;
-  color: white;
-  border-color: #ff6f61;
-  box-shadow: 0 4px 10px rgba(255, 111, 97, 0.3);
+  background: #ff6f61 !important; /* 활성화 시 배경색을 예쁜 오렌지레드로! */
+  color: #ffffff !important; /* 활성화 시 글자색을 완전한 흰색으로! */
+  border-color: #ff6f61 !important; /* 테두리선도 배경과 통일 */
+  box-shadow: 0 4px 10px rgba(255, 111, 97, 0.3); /* 주황색 은은한 그림자 효과 */
 }
-
 /* 📦 내상품 및 찜목록 가로 카드 뷰 스타일 */
 .mypage-tab-pane {
   background: white;

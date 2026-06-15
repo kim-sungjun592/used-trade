@@ -1,23 +1,39 @@
 import React, { useState } from 'react';
-import { RefreshCw, Coins, Clock, CheckCircle, XCircle, ArrowLeftRight } from 'lucide-react';
+import { RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import './BarterPage.css';
 
 const STATUS_CONFIG = {
-  pending:  { label: '대기 중',  color: 'yellow', icon: <Clock size={13} /> },
+  '대기중': { label: '대기 중',   color: 'yellow', icon: <Clock size={13} /> },
+  pending:  { label: '대기 중',   color: 'yellow', icon: <Clock size={13} /> },
   accepted: { label: '교환 완료', color: 'green',  icon: <CheckCircle size={13} /> },
-  rejected: { label: '거절됨',   color: 'navy',   icon: <XCircle size={13} /> },
+  rejected: { label: '거절됨',    color: 'navy',   icon: <XCircle size={13} /> },
 };
 
 export default function BarterPage() {
-  const { barterRequests, updateBarterStatus } = useApp();
-  const [tab, setTab] = useState('received'); 
+  const { barterRequests, updateBarterStatus, currentUser } = useApp();
+  const [tab, setTab] = useState('received');
 
-  // 기존 유저 구별 없이 전체 보낸/받은 목록을 온전히 필터링
-  const received = barterRequests.filter(r => r.toUser === '박민준');
-  const sent     = barterRequests.filter(r => r.fromUser !== '박민준');
+  // 💡 [핵심 교정] 로그인하지 않은 가상 게스트 상태('user_guest', '홍길동')에도 대응하도록 기본값 수정
+  const myId   = currentUser?.id   || 'user_guest';
+  const myName = currentUser?.name || '홍길동';
 
-  const displayed = tab === 'received' ? received : sent;
+  // 💡 필터링 조건에 r.sender 조건도 안전하게 추가
+  const received = barterRequests.filter(r => 
+    (r.receiverId === myId || r.toUser === myName) && 
+    r.senderId !== myId && r.sender !== myName
+  );
+  
+  const sent = barterRequests.filter(r => 
+    r.senderId === myId || r.fromUser === myName || r.sender === myName
+  );
+
+  // 💡 보낸 요청 탭일 때, 방금 보낸 요청 데이터를 유실하던 버그 원천 차단
+  const displayed = tab === 'received'
+    ? received
+    : sent;
+
+  const pendingCount = received.filter(r => r.status === 'pending' || r.status === '대기중').length;
 
   return (
     <div className="barter-page">
@@ -38,19 +54,14 @@ export default function BarterPage() {
           ].map(s => (
             <div key={s.n} className="how-step">
               <div className="how-num">{s.n}</div>
-              <div>
-                <strong>{s.title}</strong>
-                <p>{s.desc}</p>
-              </div>
+              <div><strong>{s.title}</strong><p>{s.desc}</p></div>
             </div>
           ))}
         </div>
 
         <div className="barter-tabs">
           <button className={`tab-btn ${tab === 'received' ? 'active' : ''}`} onClick={() => setTab('received')}>
-            받은 요청 {received.filter(r => r.status === 'pending').length > 0 && (
-              <span className="nav-badge">{received.filter(r => r.status === 'pending').length}</span>
-            )}
+            받은 요청 {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
           </button>
           <button className={`tab-btn ${tab === 'sent' ? 'active' : ''}`} onClick={() => setTab('sent')}>
             보낸 요청
@@ -65,7 +76,8 @@ export default function BarterPage() {
           </div>
         ) : (
           <div className="barter-list">
-            {displayed.map(req => (
+            {/* 최신순으로 정렬하여 보여주기 위해 정렬 로직 적용 */}
+            {[...displayed].reverse().map(req => (
               <BarterCard
                 key={req.id}
                 request={req}
@@ -82,58 +94,67 @@ export default function BarterPage() {
 }
 
 function BarterCard({ request, isReceived, onAccept, onReject }) {
-  const st = STATUS_CONFIG[request.status];
-  const pointDiff = request.toItem.points - request.fromItem.points;
+  const st = STATUS_CONFIG[request.status] || STATUS_CONFIG['대기중'];
+  const isPending = request.status === 'pending' || request.status === '대기중';
+  const fromName = request.fromUser || request.sender || '알 수 없음';
+  const toName   = request.toUser   || request.receiverId || '나';
+
+  const hasItemObj = request.fromItem && request.toItem;
+  const fallbackImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop';
 
   return (
     <div className="barter-card card">
       <div className="barter-card-header">
         <div className="barter-card-user">
-          <div className="mini-avatar">{request.fromUser?.charAt(0)}</div>
-          <span><strong>{request.fromUser}</strong> → <strong>{request.toUser}</strong></span>
+          <div className="mini-avatar">{fromName.charAt(0)}</div>
+          <span><strong>{fromName}</strong> → <strong>{toName}</strong></span>
         </div>
         <div className="barter-status">
           <span className={`badge badge-${st.color}`}>{st.icon}{st.label}</span>
-          <span className="barter-date">{request.createdAt}</span>
+          {request.createdAt && <span className="barter-date">{request.createdAt}</span>}
         </div>
       </div>
 
-      <div className="barter-items">
-        <div className="barter-item-mini">
-          <img src={request.fromItem.image} alt={request.fromItem.title}
-            onError={e => { e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop'; }} />
-          <div>
-            <div className="mini-item-name">{request.fromItem.title}</div>
-            <div className="mini-item-points"><Coins size={10} />{request.fromItem.points?.toLocaleString()}P</div>
+      {hasItemObj ? (
+        <div className="barter-items">
+          <div className="barter-item-mini">
+            <img src={request.fromItem.image || fallbackImg} alt={request.fromItem.title}
+              onError={e => { e.target.src = fallbackImg; }} />
+            <div>
+              <div className="mini-item-name">{request.fromItem.title}</div>
+              <div className="mini-item-points">{(request.fromItem.points ?? 0).toLocaleString()}P</div>
+            </div>
+          </div>
+          <div className="barter-exchange-icon">
+            <span style={{ fontSize: 20, color: 'var(--coral)' }}>⇄</span>
+          </div>
+          <div className="barter-item-mini">
+            <img src={request.toItem.image || fallbackImg} alt={request.toItem.title}
+              onError={e => { e.target.src = fallbackImg; }} />
+            <div>
+              <div className="mini-item-name">{request.toItem.title}</div>
+              <div className="mini-item-points">{(request.toItem.points ?? 0).toLocaleString()}P</div>
+            </div>
           </div>
         </div>
-
-        <div className="barter-exchange-icon">
-          <ArrowLeftRight size={18} color="var(--coral)" />
-          {pointDiff !== 0 && (
-            <div className={`point-gap ${pointDiff > 0 ? 'positive' : 'negative'}`}>
-              {pointDiff > 0 ? `+${pointDiff.toLocaleString()}P 보정` : `${pointDiff.toLocaleString()}P 차이`}
+      ) : (
+        <div className="barter-items" style={{ flexDirection: 'column', gap: 8, padding: '10px 0' }}>
+          {request.productTitle && (
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>
+              📦 요청 상품: {request.productTitle}
+            </div>
+          )}
+          {request.proposedItem && (
+            <div style={{ fontSize: 13, color: '#475569', background: '#f1f5f9', padding: '8px 12px', borderRadius: '8px', marginTop: '4px' }}>
+              🔄 제안 물품: <b>{request.proposedItem}</b>
             </div>
           )}
         </div>
-
-        <div className="barter-item-mini">
-          <img src={request.toItem.image} alt={request.toItem.title}
-            onError={e => { e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop'; }} />
-          <div>
-            <div className="mini-item-name">{request.toItem.title}</div>
-            <div className="mini-item-points"><Coins size={10} />{request.toItem.points?.toLocaleString()}P</div>
-          </div>
-        </div>
-      </div>
-
-      {request.message && (
-        <div className="barter-message">
-          💬 "{request.message}"
-        </div>
       )}
 
-      {isReceived && request.status === 'pending' && (
+      {request.message && <div className="barter-message">💬 "{request.message}"</div>}
+
+      {isReceived && isPending && (
         <div className="barter-card-actions">
           <button className="btn btn-ghost" onClick={onReject}><XCircle size={14} /> 거절</button>
           <button className="btn btn-primary" onClick={onAccept}><CheckCircle size={14} /> 수락</button>

@@ -1,10 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
-// 🔥 기존 상품 공장 데이터 그대로 유지
+import React, { createContext, useContext, useState, useEffect } from 'react'; // 💡 useEffect 추가됨
 import { mockProducts } from '../data/mockData';
 
 const AppContext = createContext();
 
-// 🗺️ 대한민국 3단계 계층형 트리 데이터 (그대로 유지)
 export const KOREA_REGION_TREE = {
   '서울': {
     '도봉구': ['방학동', '쌍문동', '창동', '도봉동'],
@@ -28,44 +26,24 @@ export const KOREA_REGION_TREE = {
 };
 
 export function AppProvider({ children }) {
-  // 1. 현재 로그인 유저 정보 (처음엔 로그인 안 된 null 상태로 시작!)
   const [currentUser, setCurrentUser] = useState(null);
-
-  // 👤 [로그인용 추가 상태] 회원가입한 유저들을 기억할 로컬 데이터 저장소
   const [usersList, setUsersList] = useState([
     { id: 'user123', name: '도봉러', email: 'dobong@example.com', password: '123' }
   ]);
 
-  // 2. 기본 상태 관리 (그대로 유지)
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [searchQuery, setSearchQuery] = useState('');
   const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const [myPoints, setMyPoints] = useState(50000);
+  const [likedItems, setLikedItems] = useState([]);
+  const [regionFilter, setRegionFilter] = useState({ sido: '전국', sigungu: '전체', dong: '전체' });
   
-  // 💡 찜한 상품 ID를 저장하는 Set 상태 (그대로 유지)
-  const [likedItems, setLikedItems] = useState(new Set());
-
-  // 3. 3단계 지역 필터 상태 (그대로 유지)
-  const [regionFilter, setRegionFilter] = useState({
-    sido: '전국',
-    sigungu: '전체',
-    dong: '전체'
-  });
-
-  // 4. 상품 데이터 상태 (그대로 유지)
-  const [products, setProducts] = useState(mockProducts);
-
-  // 📝 [기능 추가] 새로운 상품을 등록하는 함수 (이전 에러 해결용)
-  const addProduct = (newProduct) => {
-    const productWithId = {
-      ...newProduct,
-      id: Date.now(),
-      date: new Date().toISOString().split('T')[0],
-    };
-    setProducts(prev => [productWithId, ...prev]); 
-  };
-
-  // 5. 물물교환 요청 데이터 상태 (그대로 유지)
+  // ⚡ 기존 하드코딩 mockProducts를 치우고 빈 배열로 초기화합니다.
+  const [products, setProducts] = useState([]);
+  
+  const [chatRooms, setChatRooms] = useState([]);
+  
+  // 🔄 물물교환 요청 데이터 상태
   const [barterRequests, setBarterRequests] = useState([
     {
       id: 1,
@@ -80,131 +58,130 @@ export function AppProvider({ children }) {
     }
   ]);
 
-  // 채팅방 상태 (그대로 유지)
-  const [chatRooms, setChatRooms] = useState([]);
-  
-  // 6. 편의 기능 함수들 (그대로 유지)
-  const toggleHeaderMenu = () => setIsHeaderMenuOpen(!isHeaderMenuOpen);
-  
-  const toggleLike = (id) => {
-    setLikedItems(prev => { 
-      const next = new Set(prev); 
-      const strId = String(id);
-      
-      let found = false;
-      for (const item of next) {
-        if (String(item) === strId) {
-          next.delete(item);
-          found = true;
-          break;
+  // 🌐 [추가] 앱이 켜질 때 백엔드 API에서 진짜 중고 상품 데이터를 읽어옵니다.
+  useEffect(() => {
+    fetch('http://localhost:5001/api/products')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('서버 응답 상태 이상');
         }
-      }
-      
-      if (!found) {
-        next.add(strId);
-      }
-      return next; 
-    });
+        return response.json();
+      })
+      .then(data => {
+        console.log("📦 백엔드에서 실시간 수신한 상품 리스트:", data);
+        setProducts(data); // 상태 업데이트 완료
+      })
+      .catch(error => {
+        console.error("❌ API 수신 실패! mockData로 대체 작동합니다:", error);
+        setProducts(mockProducts); // 백엔드 점검 시 팅김 방지용 백업 대안
+      });
+  }, []);
+
+  // ⚡ [수정] 내 서비스 안에서 상품 등록을 수행하면 백엔드 서버 DB(배열)로 POST 요청을 쏩니다.
+  const addProduct = (newProduct) => {
+    fetch('http://localhost:5001/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newProduct),
+    })
+      .then(response => response.json())
+      .then(savedProduct => {
+        // 서버에 성공적으로 데이터가 안착하면, 프론트 화면 상태창도 리렌더링 처리
+        setProducts(prev => [savedProduct, ...prev]);
+      })
+      .catch(error => console.error("❌ 서버에 상품 등록 실패:", error));
+  };
+
+  const toggleHeaderMenu = () => setIsHeaderMenuOpen(prev => !prev);
+
+  const toggleLike = (id) => {
+    const strId = String(id);
+    setLikedItems(prev =>
+      prev.includes(strId) ? prev.filter(i => i !== strId) : [...prev, strId]
+    );
   };
 
   const startChat = (product) => {
     const existingRoom = chatRooms.find(room => room.id === product.id);
     if (existingRoom) return existingRoom.id;
     const newRoom = { id: product.id, sellerName: product.seller, productTitle: product.title, messages: [] };
-    setChatRooms(prev => [newRoom, ...prev]); 
+    setChatRooms(prev => [newRoom, ...prev]);
     return product.id;
   };
 
   const addBarterRequest = (request) => {
-    setBarterRequests(prev => [
-      { id: Date.now(), status: '대기중', createdAt: '2026-06-11', ...request },
-      ...prev
-    ]);
+    const currentUserId = currentUser?.id || 'user_guest';
+    const currentUserName = currentUser?.name || '홍길동';
+
+    const cleanRequest = {
+      id: Date.now(),
+      productId: request.productId,
+      productTitle: request.productTitle,
+      senderId: currentUserId,
+      sender: currentUserName,
+      receiverId: request.receiverId || 'user123',
+      proposedItem: request.proposedItem,
+      status: '대기중',
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    setBarterRequests(prev => [cleanRequest, ...prev]);
   };
 
   const updateBarterStatus = (requestId, newStatus) => {
-    setBarterRequests(prev => 
-      prev.map(req => req.id === requestId ? { ...req, status: newStatus } : req)
-    );
+    setBarterRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: newStatus } : req));
   };
 
-  // 🔑 [로그인용 추가 함수 1] 로그인 확인
   const login = (id, password) => {
     const user = usersList.find(u => u.id === id && u.password === password);
-    if (user) {
-      setCurrentUser(user);
-      return { success: true };
-    }
+    if (user) { setCurrentUser(user); return { success: true }; }
     return { success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' };
   };
 
-  // 🔑 [로그인용 추가 함수 2] 로그아웃
   const logout = () => setCurrentUser(null);
 
-  // 🔑 [로그인용 추가 함수 3] 회원가입 (중복 아이디 체크 포함)
   const register = (newUser) => {
-    if (usersList.some(u => u.id === newUser.id)) {
-      return { success: false, message: '이미 존재하는 아이디입니다.' };
-    }
+    if (usersList.some(u => u.id === newUser.id)) return { success: false, message: '이미 존재하는 아이디입니다.' };
     setUsersList(prev => [...prev, newUser]);
     return { success: true };
   };
 
-  // ⚙️ [마이페이지 회원정보 수정용 기능 추가] 
   const updateUserInfo = (updatedData) => {
     if (!currentUser) return { success: false, message: '로그인이 필요합니다.' };
-
-    // 1. 가입된 전체 회원 명부(usersList)에서 내 정보를 찾아 수정합니다.
-    setUsersList(prev => prev.map(user => 
-      user.id === currentUser.id ? { ...user, ...updatedData } : user
-    ));
-
-    // 2. 현재 로그인 세션 상태(currentUser)도 똑같이 동기화해 줍니다.
+    setUsersList(prev => prev.map(u => u.id === currentUser.id ? { ...u, ...updatedData } : u));
     setCurrentUser(prev => ({ ...prev, ...updatedData }));
-
     return { success: true };
   };
 
-  // 7. 계층형 지역 + 카테고리 + 검색 필터링 파이프라인 (그대로 유지)
   const filteredProducts = products.filter(product => {
     const matchCategory = selectedCategory === '전체' || product.category === selectedCategory;
     const matchSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
     let matchRegion = true;
     if (regionFilter.sido !== '전국') {
-      if (regionFilter.sigungu === '전체') {
-        matchRegion = product.location.startsWith(regionFilter.sido);
-      } else if (regionFilter.dong === '전체') {
-        matchRegion = product.location.startsWith(`${regionFilter.sido} ${regionFilter.sigungu}`);
-      } else {
-        matchRegion = product.location.includes(regionFilter.dong);
-      }
+      if (regionFilter.sigungu === '전체') matchRegion = product.location.startsWith(regionFilter.sido);
+      else if (regionFilter.dong === '전체') matchRegion = product.location.startsWith(`${regionFilter.sido} ${regionFilter.sigungu}`);
+      else matchRegion = product.location.includes(regionFilter.dong);
     }
     return matchCategory && matchSearch && matchRegion;
   });
 
-  // 💡 찜한 상품들만 모은 배열 (그대로 유지)
-  const likedProducts = products.filter(product => {
-    const targetId = String(product.id);
-    const likedArray = Array.from(likedItems).map(String);
-    return likedArray.includes(targetId);
-  });
+  const likedProducts = products.filter(p => likedItems.includes(String(p.id)));
 
   return (
-    // 🔥기존 가치들에 더해 'updateUserInfo'까지 확실하게 추가 완료!
     <AppContext.Provider value={{
       currentUser, setCurrentUser,
-      login, logout, register, 
-      updateUserInfo, // <--- ⚙️ 마이페이지 수정 함수 주입!
-      products, filteredProducts, addProduct, 
+      login, logout, register, updateUserInfo,
+      products, filteredProducts, addProduct,
       selectedCategory, setSelectedCategory,
       regionFilter, setRegionFilter,
       searchQuery, setSearchQuery,
       isHeaderMenuOpen, toggleHeaderMenu,
-      myPoints, likedItems, toggleLike,
+      myPoints,
+      likedItems, toggleLike, likedProducts,
       chatRooms, startChat,
       barterRequests, addBarterRequest, updateBarterStatus,
-      likedProducts 
     }}>
       {children}
     </AppContext.Provider>

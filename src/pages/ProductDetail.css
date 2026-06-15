@@ -298,3 +298,35 @@
   cursor: pointer;
   font-weight: bold;
 }
+/* 하단 바 내부 버튼 구조 비율 조정 */
+.detail-bottom-bar .bottom-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* 버튼 간격 조정 */
+}
+
+/* ⚡ 새로 만든 교환 제안 버튼 스타일 */
+.bottom-barter-btn {
+  flex: 1;
+  background: #059669; /* 초록색 포인트 (희망교환물건 아이콘 색상과 매칭) */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bottom-barter-btn:hover {
+  background: #047857;
+}
+
+/* 기존 채팅 버튼도 비율이 깨지지 않게 flex: 1 지정 */
+.detail-bottom-bar .bottom-chat-btn {
+  flex: 1;
+}
