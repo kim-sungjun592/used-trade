@@ -19,10 +19,17 @@ export default function Home() {
   const [tmpSido, setTmpSido] = useState('');
   const [tmpSigungu, setTmpSigungu] = useState('');
 
+  // 💡 [수정] regionFilter가 정의되지 않았거나 비어있을 때를 대비한 안전 가드 추가
   const getRegionLabel = () => {
-    if (regionFilter.sido === '전국') return '📍 지역: 전국구';
-    if (regionFilter.sigungu === '전체') return `📍 ${regionFilter.sido} 전체`;
-    if (regionFilter.dong === '전체') return `📍 ${regionFilter.sido} ${regionFilter.sigungu}`;
+    if (!regionFilter || regionFilter.sido === '전국' || !regionFilter.sido) {
+      return '📍 지역: 전국구';
+    }
+    if (regionFilter.sigungu === '전체' || !regionFilter.sigungu) {
+      return `📍 ${regionFilter.sido} 전체`;
+    }
+    if (regionFilter.dong === '전체' || !regionFilter.dong) {
+      return `📍 ${regionFilter.sido} ${regionFilter.sigungu}`;
+    }
     return `📍 ${regionFilter.sido} ${regionFilter.sigungu} ${regionFilter.dong}`;
   };
 
@@ -39,7 +46,7 @@ export default function Home() {
           <input 
             type="text" 
             placeholder="어떤 상품을 찾으시나요?" 
-            value={searchQuery}
+            value={searchQuery || ''} // 💡 searchQuery가 혹시 비어있어도 에러 안 나게 안전 처리
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
@@ -56,13 +63,13 @@ export default function Home() {
 
             <div className="triple-box">
               <div className="col-box">
-                {Object.keys(KOREA_REGION_TREE).map(sido => (
+                {KOREA_REGION_TREE && Object.keys(KOREA_REGION_TREE).map(sido => (
                   <div key={sido} className={`col-item ${tmpSido === sido ? 'active' : ''}`}
                     onClick={() => { setTmpSido(sido); setTmpSigungu(''); }}>{sido}</div>
                 ))}
               </div>
               <div className="col-box">
-                {tmpSido ? (
+                {tmpSido && KOREA_REGION_TREE[tmpSido] ? (
                   <>
                     <div className="col-item all-item" onClick={() => {
                       setRegionFilter({ sido: tmpSido, sigungu: '전체', dong: '전체' }); setShowRegionModal(false);
@@ -75,7 +82,7 @@ export default function Home() {
                 ) : <div className="col-empty">시/도 선택</div>}
               </div>
               <div className="col-box">
-                {tmpSido && tmpSigungu ? (
+                {tmpSido && tmpSigungu && KOREA_REGION_TREE[tmpSido][tmpSigungu] ? (
                   <>
                     <div className="col-item all-item" onClick={() => {
                       setRegionFilter({ sido: tmpSido, sigungu: tmpSigungu, dong: '전체' }); setShowRegionModal(false);
@@ -109,8 +116,7 @@ export default function Home() {
 
       {/* 📦 상품 리스트 그리드 */}
       <div className="main-product-grid">
-        {filteredProducts.map(product => {
-          // 💡 [.has] 대신 배열 체크용 [.includes] 또는 [.some]을 사용해 에러를 방지합니다.
+        {filteredProducts && filteredProducts.map(product => {
           const isLiked = likedItems && (
             Array.isArray(likedItems) 
               ? likedItems.includes(product.id) || likedItems.includes(String(product.id))

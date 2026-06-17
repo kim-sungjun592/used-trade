@@ -18,22 +18,23 @@ export default function BarterPage() {
   const myId   = currentUser?.id   || 'user_guest';
   const myName = currentUser?.name || '홍길동';
 
-  // 💡 필터링 조건에 r.sender 조건도 안전하게 추가
-  const received = barterRequests.filter(r => 
-    (r.receiverId === myId || r.toUser === myName) && 
+  // 🔥 [안전 가드 추가] barterRequests가 없거나(undefined/null) 배열이 아니면 빈 배열([])로 대체합니다.
+  const requests = Array.isArray(barterRequests) ? barterRequests : [];
+
+  // 💡 이제 barterRequests 대신 가드 처리가 된 'requests' 변수를 사용하여 필터링합니다.
+  const received = requests.filter(r => 
+    r && (r.receiverId === myId || r.toUser === myName) && 
     r.senderId !== myId && r.sender !== myName
   );
   
-  const sent = barterRequests.filter(r => 
-    r.senderId === myId || r.fromUser === myName || r.sender === myName
+  const sent = requests.filter(r => 
+    r && (r.senderId === myId || r.fromUser === myName || r.sender === myName)
   );
 
   // 💡 보낸 요청 탭일 때, 방금 보낸 요청 데이터를 유실하던 버그 원천 차단
-  const displayed = tab === 'received'
-    ? received
-    : sent;
+  const displayed = tab === 'received' ? received : sent;
 
-  const pendingCount = received.filter(r => r.status === 'pending' || r.status === '대기중').length;
+  const pendingCount = received.filter(r => r && (r.status === 'pending' || r.status === '대기중')).length;
 
   return (
     <div className="barter-page">
@@ -78,13 +79,15 @@ export default function BarterPage() {
           <div className="barter-list">
             {/* 최신순으로 정렬하여 보여주기 위해 정렬 로직 적용 */}
             {[...displayed].reverse().map(req => (
-              <BarterCard
-                key={req.id}
-                request={req}
-                isReceived={tab === 'received'}
-                onAccept={() => updateBarterStatus(req.id, 'accepted')}
-                onReject={() => updateBarterStatus(req.id, 'rejected')}
-              />
+              req && (
+                <BarterCard
+                  key={req.id}
+                  request={req}
+                  isReceived={tab === 'received'}
+                  onAccept={() => updateBarterStatus && updateBarterStatus(req.id, 'accepted')}
+                  onReject={() => updateBarterStatus && updateBarterStatus(req.id, 'rejected')}
+                />
+              )
             ))}
           </div>
         )}

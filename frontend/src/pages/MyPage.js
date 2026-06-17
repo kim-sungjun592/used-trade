@@ -4,126 +4,149 @@ import { useNavigate } from 'react-router-dom';
 import './MyPage.css';
 
 export default function MyPage() {
-  const { 
-    currentUser, 
-    myPoints, 
-    barterRequests, 
+  const {
+    currentUser,
+    myPoints,
+    barterRequests,
     updateUserInfo,
-    products,       
-    likedProducts   
+    verifyPassword,
+    myProducts,
+    likedProducts
   } = useApp();
 
   const navigate = useNavigate();
-
-  // 🗂️ 하단 탭 상태 관리 ('info' | 'myItems' | 'likes' | 'barter')
   const [activeTab, setActiveTab] = useState('info');
 
-  // 로그인 기능이 제거되었으므로, 가상의 유저 기본값 세팅 (에러 방지)
-  const user = currentUser || { id: 'user_guest', name: '홍길동', email: 'guest@example.com', password: '123' };
+  const user = currentUser || { name: '게스트', email: '', id: 'guest' };
   const points = myPoints || 0;
   const requests = barterRequests || [];
-  const items = products || [];
   const likes = likedProducts || [];
 
-  // 회원정보 수정 모드 상태들
+  // 회원정보 수정 상태
   const [isEditMode, setIsEditMode] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [editName, setEditName] = useState(user.name);
   const [editEmail, setEditEmail] = useState(user.email);
   const [editPassword, setEditPassword] = useState('');
-
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // 내가 올린 상품들 필터링
-  const myUploadedProducts = items.filter(
-    p => p.seller === user.name || p.sellerId === user.id
-  );
-
-  // 현재 비밀번호 검증 핸들러
-  const handleVerifyPassword = (e) => {
+  // ✅ 백엔드로 비밀번호 검증
+  const handleVerifyPassword = async (e) => {
     e.preventDefault();
-    if (confirmPassword === user.password) {
+    if (!confirmPassword) {
+      setMessage('❌ 비밀번호를 입력해주세요.');
+      return;
+    }
+    const res = await verifyPassword(confirmPassword);
+    if (res.success) {
       setIsEditMode(true);
       setMessage('');
     } else {
-      setMessage('❌ 현재 비밀번호가 일치하지 않습니다. (테스트용 비번: ' + user.password + ')');
+      setMessage('❌ 비밀번호가 일치하지 않습니다.');
       setIsSuccess(false);
     }
   };
 
-  // 변경된 정보 저장 핸들러
-  const handleSaveInfo = (e) => {
+  // ✅ 회원정보 저장
+  const handleSaveInfo = async (e) => {
     e.preventDefault();
     if (!editName || !editEmail) {
       setMessage('❌ 빈칸을 모두 채워주세요.');
       return;
     }
+    const updateData = {
+      nickname: editName,
+      email: editEmail,
+    };
+    if (editPassword) updateData.password = editPassword;
 
-    if (updateUserInfo) {
-      updateUserInfo({
-        name: editName,
-        email: editEmail,
-        password: editPassword || user.password
-      });
+    const res = await updateUserInfo(updateData);
+    if (res.success) {
+      setMessage('✨ 회원정보가 변경되었습니다!');
+      setIsSuccess(true);
+      setIsEditMode(false);
+      setConfirmPassword('');
+      setEditPassword('');
+    } else {
+      setMessage(`❌ ${res.message}`);
+      setIsSuccess(false);
     }
-    
-    setMessage('✨ 회원정보가 안전하게 변경되었습니다! (시뮬레이션)');
-    setIsSuccess(true);
-    setIsEditMode(false);
-    setConfirmPassword('');
-    setEditPassword('');
   };
 
   return (
     <div className="mypage-container">
-      
-      {/* 💳 1. 최상단 대시보드 */}
+
+      {/* 대시보드 */}
       <div className="user-dash-card">
         <div className="user-avatar">👤</div>
         <div className="user-dash-info">
-          <h3>{user.name} <span>({user.id})</span></h3>
+          <h3>{user.name}</h3>
           <p>보유 포인트: <strong>{points.toLocaleString()} P</strong></p>
         </div>
       </div>
 
-      {/* 🗂️ 2. 네비게이션 탭 메뉴 */}
+      {/* 탭 메뉴 */}
       <div className="mypage-tabs">
         <button className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>⚙️ 정보 수정</button>
-        <button className={`tab-btn ${activeTab === 'myItems' ? 'active' : ''}`} onClick={() => setActiveTab('myItems')}>📦 내 등록 상품 ({myUploadedProducts.length})</button>
+        <button className={`tab-btn ${activeTab === 'myItems' ? 'active' : ''}`} onClick={() => setActiveTab('myItems')}>📦 내 등록 상품 ({myProducts.length})</button>
         <button className={`tab-btn ${activeTab === 'likes' ? 'active' : ''}`} onClick={() => setActiveTab('likes')}>❤️ 찜 목록 ({likes.length})</button>
         <button className={`tab-btn ${activeTab === 'barter' ? 'active' : ''}`} onClick={() => setActiveTab('barter')}>🔄 교환 내역 ({requests.length})</button>
       </div>
 
-      {/* 📺 3. 탭 결과 화면 컨텐츠 구역 */}
       <div className="mypage-main-content">
-        
-        {/* ⚙️ 탭 [A] : 회원정보 수정 */}
+
+        {/* 탭 A: 회원정보 수정 */}
         {activeTab === 'info' && (
           <div className="mypage-tab-pane">
             <div className="pane-header"><h4>회원정보 관리</h4></div>
-            
-            {message && <div className={`mypage-alert ${isSuccess ? 'alert-success' : 'alert-danger'}`}>{message}</div>}
+
+            {message && (
+              <div className={`mypage-alert ${isSuccess ? 'alert-success' : 'alert-danger'}`}>
+                {message}
+              </div>
+            )}
 
             {!isEditMode ? (
               <div className="info-view-box">
-                <div className="info-row"><span className="info-label">아이디</span><span className="info-value readonly">{user.id}</span></div>
-                <div className="info-row"><span className="info-label">닉네임</span><span className="info-value">{user.name}</span></div>
-                <div className="info-row"><span className="info-label">이메일</span><span className="info-value">{user.email}</span></div>
+                {/* ✅ 로그인한 계정 정보 표시 */}
+                <div className="info-row">
+                  <span className="info-label">닉네임</span>
+                  <span className="info-value">{user.name}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">이메일</span>
+                  <span className="info-value">{user.email || '이메일 정보 없음'}</span>
+                </div>
                 <hr className="info-divider" />
                 <form onSubmit={handleVerifyPassword} className="password-check-form">
                   <p className="form-guide">⚠️ 안전을 위해 현재 비밀번호를 입력해야 정보 수정이 가능합니다.</p>
                   <div className="input-group">
-                    <input type="password" placeholder="현재 비밀번호 입력" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                    <input
+                      type="password"
+                      placeholder="현재 비밀번호 입력"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
                     <button type="submit" className="btn-verify">인증 후 수정</button>
                   </div>
                 </form>
               </div>
             ) : (
               <form onSubmit={handleSaveInfo} className="info-edit-form">
-                <div className="edit-field"><label>닉네임 변경</label><input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required /></div>
-                <div className="edit-field"><label>이메일 변경</label><input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required /></div>
-                <div className="edit-field"><label>새 비밀번호 (변경할 경우만 입력)</label><input type="password" placeholder="새비밀번호" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} /></div>
+                <div className="edit-field">
+                  <label>닉네임 변경</label>
+                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                </div>
+                <div className="edit-field">
+                  <label>이메일 변경</label>
+                  <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} required />
+                </div>
+                <div className="edit-field">
+                  <label>새 비밀번호 (변경할 경우만 입력)</label>
+                  <input type="password" placeholder="새 비밀번호" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} />
+                </div>
                 <div className="edit-btn-group">
                   <button type="submit" className="btn-save-changes">저장하기</button>
                   <button type="button" className="btn-cancel-edit" onClick={() => { setIsEditMode(false); setMessage(''); }}>취소</button>
@@ -133,20 +156,21 @@ export default function MyPage() {
           </div>
         )}
 
-        {/* 📦 탭 [B] : 내가 올린 상품 리스트 */}
+        {/* 탭 B: 내가 올린 상품 */}
         {activeTab === 'myItems' && (
           <div className="mypage-tab-pane">
             <div className="pane-header"><h4>내가 등록한 거래물품</h4></div>
             <div className="mypage-product-list">
-              {myUploadedProducts.length === 0 ? (
+              {myProducts.length === 0 ? (
                 <p className="empty-txt">아직 등록한 상품이 없습니다. 첫 상품을 등록해 보세요!</p>
               ) : (
-                myUploadedProducts.map(product => (
+                myProducts.map(product => (
                   <div key={product.id} className="mypage-item-card" onClick={() => navigate(`/product/${product.id}`)}>
-                    <img src={product.image} alt={product.title} className="mini-card-img" />
+                    <img src={product.image} alt={product.title} className="mini-card-img"
+                      onError={e => { e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80'; }} />
                     <div className="mini-card-info">
                       <h5>{product.title}</h5>
-                      <span>{product.price.toLocaleString()}원</span>
+                      <span>{product.price?.toLocaleString()}원</span>
                     </div>
                   </div>
                 ))
@@ -155,7 +179,7 @@ export default function MyPage() {
           </div>
         )}
 
-        {/* ❤️ 탭 [C] : 내가 찜한 상품 리스트 */}
+        {/* 탭 C: 찜 목록 */}
         {activeTab === 'likes' && (
           <div className="mypage-tab-pane">
             <div className="pane-header"><h4>내가 하트 누른 찜 목록</h4></div>
@@ -165,10 +189,11 @@ export default function MyPage() {
               ) : (
                 likes.map(product => (
                   <div key={product.id} className="mypage-item-card" onClick={() => navigate(`/product/${product.id}`)}>
-                    <img src={product.image} alt={product.title} className="mini-card-img" />
+                    <img src={product.image} alt={product.title} className="mini-card-img"
+                      onError={e => { e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80'; }} />
                     <div className="mini-card-info">
                       <h5>{product.title}</h5>
-                      <span>{product.price.toLocaleString()}원</span>
+                      <span>{product.price?.toLocaleString()}원</span>
                     </div>
                   </div>
                 ))
@@ -177,7 +202,7 @@ export default function MyPage() {
           </div>
         )}
 
-        {/* 🔄 탭 [D] : 물물교환 요청 기록 (보낸 요청과 받은 요청을 라벨로 명확히 분리!) */}
+        {/* 탭 D: 교환 내역 */}
         {activeTab === 'barter' && (
           <div className="mypage-tab-pane">
             <div className="pane-header"><h4>물물교환 내역</h4></div>
@@ -185,24 +210,17 @@ export default function MyPage() {
               {requests.length === 0 ? (
                 <p className="empty-txt">교환 신청 내역이 깨끗합니다.</p>
               ) : (
-                // [...requests].reverse()를 사용하여 방금 상세페이지에서 제안한 최신 내역이 리스트 맨 위에 뜨게 만듭니다.
                 [...requests].reverse().map(req => {
-                  // 내가 보낸 요청인지 확인하는 판별식 (senderId나 sender 이름 기준)
-                  const isMyProposal = req.senderId === 'user_guest' || req.sender === '홍길동';
-
+                  const isMyProposal = req.senderId === currentUser?.id || req.sender === currentUser?.name;
                   return (
-                    <div 
-                      key={req.id} 
-                      className="barter-card-item" 
-                      style={{ borderLeft: isMyProposal ? '4px solid #059669' : '4px solid #ff6f61' }}
-                    >
+                    <div key={req.id} className="barter-card-item"
+                      style={{ borderLeft: isMyProposal ? '4px solid #059669' : '4px solid #ff6f61' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
-                          <span className="status-badge" style={{ 
-                            background: isMyProposal ? '#e6f4ea' : '#fce8e6', 
-                            color: isMyProposal ? '#137333' : '#c5221f', 
-                            marginRight: '8px',
-                            fontWeight: 'bold'
+                          <span className="status-badge" style={{
+                            background: isMyProposal ? '#e6f4ea' : '#fce8e6',
+                            color: isMyProposal ? '#137333' : '#c5221f',
+                            marginRight: '8px', fontWeight: 'bold'
                           }}>
                             {isMyProposal ? '📤 보낸 제안' : '📥 받은 제안'}
                           </span>
@@ -210,11 +228,7 @@ export default function MyPage() {
                         </div>
                         <span style={{ fontSize: '12px', color: '#94a3b8' }}>{req.createdAt || '방금 전'}</span>
                       </div>
-                      
-                      <div className="barter-item-title" style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>
-                        상대 상품: <span>{req.productTitle}</span>
-                      </div>
-                      
+                      <div className="barter-item-title">상대 상품: <span>{req.productTitle}</span></div>
                       <div className="barter-item-detail" style={{ marginTop: '6px', fontSize: '13px', color: '#475569' }}>
                         <span>제안한 물건: <b style={{ color: isMyProposal ? '#059669' : '#1e293b' }}>{req.proposedItem}</b></span>
                       </div>

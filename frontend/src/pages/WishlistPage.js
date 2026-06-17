@@ -5,23 +5,26 @@ import { useNavigate } from 'react-router-dom';
 import './WishlistPage.css';
 
 export default function WishlistPage() {
-  const { likedProducts } = useApp();
-  const { toggleLike } = useApp();
+  // 💡 중복 호출을 줄이고 코드 구조를 깔끔하게 통합
+  const { likedProducts, toggleLike } = useApp();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [removingId, setRemovingId] = useState(null);
 
-  // likedProducts 는 AppContext에서 이미 products.filter(...)로 만들어진 배열
+  // likedProducts가 안전한 배열인지 검증 가드
   const likes = Array.isArray(likedProducts) ? likedProducts : [];
 
+  // 검색어 필터링 (제목 및 카테고리 기준)
   const filtered = likes.filter(p =>
     (p.title || '').toLowerCase().includes(search.toLowerCase()) ||
     (p.category || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleRemove = (e, id) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 카드 상세 이동 링크 방지
     setRemovingId(id);
+    
+    // 💡 300ms 동안 페이드아웃 애니메이션을 먼저 보여준 뒤, 상태를 안전하게 토글합니다.
     setTimeout(() => {
       toggleLike(id);
       setRemovingId(null);
@@ -32,7 +35,7 @@ export default function WishlistPage() {
     <div className="wishlist-page">
       <div className="wishlist-inner">
 
-        {/* 헤더 */}
+        {/* 헤더 구역 */}
         <div className="wishlist-header">
           <div className="wishlist-title-row">
             <div className="wishlist-icon-wrap">
@@ -48,7 +51,7 @@ export default function WishlistPage() {
           </div>
         </div>
 
-        {/* 검색바 */}
+        {/* 검색 구역 */}
         {likes.length > 0 && (
           <div className="wishlist-search-wrap">
             <Search size={16} className="search-icon" />
@@ -61,7 +64,7 @@ export default function WishlistPage() {
           </div>
         )}
 
-        {/* 빈 상태 */}
+        {/* 조건별 상태 렌더링 */}
         {likes.length === 0 ? (
           <div className="wishlist-empty">
             <div className="empty-heart-anim">
@@ -91,7 +94,9 @@ export default function WishlistPage() {
                   <img
                     src={product.image}
                     alt={product.title}
+                    // 💡 Unsplash 404 차단용 예외처리 보완 및 정상 노출 보장
                     onError={e => {
+                      e.target.onerror = null; // 무한 루프 방지
                       e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop';
                     }}
                   />
@@ -119,8 +124,11 @@ export default function WishlistPage() {
                       <span className="wl-location">{product.location}</span>
                     )}
                   </div>
-                  {product.exchangeItem && (
-                    <div className="wl-exchange-tag">🔄 {product.exchangeItem}</div>
+                  {/* 데이터 호환을 위해 exchangeItem 및 exchange 둘 다 대응 가능하도록 보완 */}
+                  {(product.exchangeItem || product.exchange) && (
+                    <div className="wl-exchange-tag">
+                      🔄 {product.exchangeItem || product.exchange}
+                    </div>
                   )}
                 </div>
               </div>

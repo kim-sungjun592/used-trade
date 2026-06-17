@@ -1,124 +1,344 @@
+/* ==========================================
+   1. 상단 네비게이션 바 전체 레이아웃
+   ========================================== */
 .app-navbar {
-  border-bottom: 1px solid #e2e8f0;
-  background: #fff;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e9ecef;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 999;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
 }
+
+/* 내부 정렬 컨테이너 (로고와 우측 메뉴 양끝 정렬) */
 .navbar-inner {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  height: 64px;
-  padding: 0 16px;
+  align-items: center;
+  padding: 12px 40px;
+  max-width: 1200px; /* 전체 프로젝트 해상도에 맞춰 조절 가능 */
+  margin: 0 auto;
 }
+
+/* 당근 마켓 스타일 로고 */
 .logo {
-  font-size: 20px;
-  font-weight: bold;
-  text-decoration: none;
+  font-size: 22px;
+  font-weight: 800;
   color: #ff6f61;
+  text-decoration: none; /* Link 태그 밑줄 제거 */
+  user-select: none;
 }
+
+/* 우측 메뉴 영역 기둥 */
 .navbar-links {
   display: flex;
   align-items: center;
   gap: 20px;
 }
+
+/* ==========================================
+   2. 개별 버튼 및 아이콘 스타일링
+   ========================================== */
+
+/* 물품 등록 버튼 (오렌지색 알약/캡슐 모양) */
 .btn-sell-nav {
-  background: #ff6f61;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
+  background-color: #ff6f61;
+  color: white !important;
   text-decoration: none;
-  font-weight: 600;
+  padding: 8px 18px;
   font-size: 14px;
-}
-.nav-icon-link {
-  color: #475569;
-  display: flex;
+  font-weight: bold;
+  border-radius: 20px;
+  transition:
+    background 0.2s,
+    transform 0.1s;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
 
-/* 통합 메뉴 스타일 */
+.btn-sell-nav:hover {
+  background-color: #e55b4e;
+}
+
+.btn-sell-nav:active {
+  transform: scale(0.97);
+}
+
+/* 💬 채팅 아이콘 링크 */
+.nav-icon-link {
+  color: #495057;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.nav-icon-link:hover {
+  background-color: #f1f3f5;
+  color: #212529;
+}
+
+/* ==========================================
+   3. 내 메뉴 회원 프로필 / 드롭다운 팝오버
+   ========================================== */
+
+/* 드롭다운 기준점 컨테이너 */
 .my-menu-wrapper {
   position: relative;
 }
+
+/* 라운드 알약형 내 메뉴 버튼 */
 .my-menu-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f1f5f9;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 30px;
-  cursor: pointer;
+  background-color: #f1f3f5;
+  border: 1.5px solid #ced4da;
+  padding: 6px 14px;
+  border-radius: 24px;
   font-size: 14px;
-  color: #334155;
+  font-weight: 600;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
 }
+
 .my-menu-btn:hover {
-  background: #e2e8f0;
+  background-color: #e9ecef;
+  border-color: #adb5bd;
 }
+
+/* 프사 아이콘 영역 동그라미 */
 .nav-avatar {
-  background: #cbd5e1;
+  background-color: #dee2e6;
+  color: #868e96;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  width: 26px;
-  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
 }
-.my-menu-btn .nav-arrow {
+
+.nav-user-name {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chevron 화살표 애니메이션 */
+.nav-arrow {
+  color: #868e96;
   transition: transform 0.2s ease;
 }
-.my-menu-btn .nav-arrow.open {
+
+.nav-arrow.open {
   transform: rotate(180deg);
 }
 
+/* 아래로 떨어지는 고급스러운 메뉴 팝오버 박스 */
 .my-menu-popover {
   position: absolute;
-  top: 42px;
   right: 0;
-  width: 180px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  top: 42px;
+  background-color: white;
+  border: 1px solid #dee2e6;
   border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  min-width: 170px;
   padding: 8px 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 110;
+  z-index: 1000;
+  animation: popoverFadeIn 0.2s ease-out;
 }
+
+/* 유저 상단 인사말 */
 .popover-user {
-  padding: 8px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  padding: 10px 16px;
   font-size: 14px;
+  color: #212529;
 }
-.popover-points {
-  color: #ff6f61;
-  font-weight: bold;
-  font-size: 12px;
-}
+
 .my-menu-popover hr {
-  border: 0;
-  border-top: 1px solid #f1f5f9;
+  border: none;
+  border-top: 1px solid #f1f3f5;
   margin: 6px 0;
 }
+
+/* 드롭다운 리스트 개별 아이템 (아이콘 정렬 포함) */
 .popover-item {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px; /* 아이콘과 텍스트 사이 간격 */
   background: none;
   border: none;
   padding: 10px 16px;
-  text-align: left;
-  width: 100%;
+  font-size: 13.5px;
+  color: #495057;
   cursor: pointer;
-  font-size: 14px;
-  color: #475569;
+  text-align: left;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
+
 .popover-item:hover {
-  background: #f8fafc;
-  color: #ff6f61;
+  background-color: #f8f9fa;
+  color: #1a1d20;
+}
+
+.popover-item svg {
+  color: #868e96; /* 아이콘 색상 은은하게 통일 */
+  transition: color 0.2s;
+}
+
+.popover-item:hover svg {
+  color: #495057;
+}
+
+/* ==========================================
+   4. 로그인 / 회원가입 중앙 팝업 모달
+   ========================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+  animation: modalSlideUp 0.2s ease-out;
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #212529;
+  text-align: center;
+  font-weight: 700;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-content input {
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal-content input:focus {
+  border-color: #ff6f61;
+}
+
+/* 모달 제출 버튼 */
+.btn-submit {
+  background-color: #ff6f61;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 4px;
+}
+
+.btn-submit:hover {
+  background-color: #e55b4e;
+}
+
+/* 모달 하단 스위치 텍스트 및 닫기 */
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.modal-footer span {
+  font-size: 13px;
+  color: #868e96;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.modal-footer span:hover {
+  color: #495057;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #adb5bd;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-close:hover {
+  color: #495057;
+}
+
+/* 에러 메시지 알림 */
+.error-message {
+  color: #ef4444;
+  font-size: 12.5px;
+  text-align: center;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+/* ==========================================
+   5. 부드러운 애니메이션 효과 정의
+   ========================================== */
+@keyframes popoverFadeIn {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(15px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
