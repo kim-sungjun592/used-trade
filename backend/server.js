@@ -3,17 +3,18 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cors = require('cors'); // 👈 [추가] 브라우저 CORS 차단 문제를 해결할 정식 라이브러리
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5002; // 👈 [수정] 프론트엔드가 요청 중인 5002 포트로 강제 고정합니다.
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+// 💡 [수정] 수동 헤더 설정 대신, Safari/Webkit의 Access Control 필터를 우회하는 정식 CORS 미들웨어 적용
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
 
 app.use(express.json());
 
@@ -43,7 +44,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   nickname: { type: String, required: true },
-  wishlist: { type: [Number], default: [] } // 👈 [추가] 찜 목록 데이터 저장 공간
+  wishlist: { type: [Number], default: [] }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -80,7 +81,6 @@ app.get('/api/wishlist', authenticate, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 기존 API들...
 app.get('/api/products', async (req, res) => {
   try { const products = await Product.find().sort({ _id: -1 }); res.json(products); }
   catch (err) { res.status(500).json({ error: err.message }); }
@@ -109,7 +109,6 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 🍊 카카오 로그인 콜백
 app.get('/api/auth/kakao/callback', async (req, res) => {
   try {
     const { code } = req.query;
@@ -145,7 +144,7 @@ async function seedDatabase(faker) {
   }));
   await Product.insertMany(initialProducts);
 }
-// ✅ 비밀번호 검증 API
+
 app.post('/api/auth/verify-password', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -161,7 +160,6 @@ app.post('/api/auth/verify-password', async (req, res) => {
   }
 });
 
-// ✅ 회원정보 수정 API
 app.put('/api/auth/update', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -178,4 +176,5 @@ app.put('/api/auth/update', async (req, res) => {
     res.status(500).json({ message: '서버 에러', error: err.message });
   }
 });
+
 app.listen(PORT, () => console.log(`🚀 서버 포트 ${PORT} 실행 중!`));
