@@ -1,12 +1,12 @@
-version: '3.8'
+version: "3.8"
 
 services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile  # 👈 frontend 폴더 안의 Dockerfile을 바라보도록 수정
+      dockerfile: Dockerfile # 👈 frontend 폴더 안의 Dockerfile을 바라보도록 수정
     ports:
-      - "3000:3000"           # 👈 리액트 기본 포트인 3000으로 깔끔하게 매핑
+      - "3000:3000" # 👈 리액트 기본 포트인 3000으로 깔끔하게 매핑
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -15,12 +15,12 @@ services:
     depends_on:
       - backend
 
-  backend:                    # 👈 드디어 services 안으로 예쁘게 들어옴!
+  backend: # 👈 드디어 services 안으로 예쁘게 들어옴!
     build:
       context: ./backend
-      dockerfile: Dockerfile  # 👈 backend 폴더 안의 Dockerfile을 바라봄
+      dockerfile: Dockerfile # 👈 backend 폴더 안의 Dockerfile을 바라봄
     ports:
-      - "5002:5000"           # 👈 맥북 충돌을 피하기 위해 외부 포트는 5002로 지정
+      - "5002:5002" # 👈 맥북 충돌을 피하기 위해 외부 포트는 5002로 지정
     volumes:
       - ./backend:/app
       - /app/node_modules
