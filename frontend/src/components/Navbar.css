@@ -25,6 +25,8 @@
 
 /* 당근 마켓 스타일 로고 */
 .logo {
+  text-align: left;
+  margin-left: -120px;
   font-size: 22px;
   font-weight: 800;
   color: #ff6f61;
